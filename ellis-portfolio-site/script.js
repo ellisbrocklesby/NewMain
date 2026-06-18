@@ -207,13 +207,28 @@ const themeToggle = document.getElementById('themeToggle');
 
 if(settingsToggle && settingsPanel){
   settingsToggle.addEventListener('click', ()=>{
-    const open = settingsPanel.hasAttribute('hidden');
-    if(open){ settingsPanel.hidden = false; settingsPanel.classList.add('open'); }
-    else { settingsPanel.hidden = true; settingsPanel.classList.remove('open'); }
+    const isHidden = settingsPanel.hasAttribute('hidden');
+    if(isHidden){
+      settingsPanel.hidden = false;
+      // allow layout to settle then show
+      requestAnimationFrame(()=> settingsPanel.classList.add('open'));
+    } else {
+      // close animation then hide
+      settingsPanel.classList.remove('open');
+      const onEnd = (e)=>{
+        if(e.target !== settingsPanel) return;
+        settingsPanel.hidden = true;
+        settingsPanel.removeEventListener('transitionend', onEnd);
+      };
+      settingsPanel.addEventListener('transitionend', onEnd);
+    }
   });
 }
 if(settingsClose && settingsPanel){
-  settingsClose.addEventListener('click', ()=>{ settingsPanel.hidden = true; settingsPanel.classList.remove('open'); });
+  settingsClose.addEventListener('click', ()=>{
+    settingsPanel.classList.remove('open');
+    settingsPanel.addEventListener('transitionend', function te(){ settingsPanel.hidden = true; settingsPanel.removeEventListener('transitionend', te); }, { once: true });
+  });
 }
 
 // Toggle theme and persist
@@ -233,7 +248,10 @@ if(themeToggle){
 document.addEventListener('click', (e)=>{
   if(settingsPanel && !settingsPanel.hidden){
     const inside = settingsPanel.contains(e.target) || (settingsToggle && settingsToggle.contains(e.target));
-    if(!inside){ settingsPanel.hidden = true; settingsPanel.classList.remove('open'); }
+    if(!inside){
+      settingsPanel.classList.remove('open');
+      settingsPanel.addEventListener('transitionend', function te(){ settingsPanel.hidden = true; settingsPanel.removeEventListener('transitionend', te); }, { once: true });
+    }
   }
 });
 

@@ -37,6 +37,10 @@ header.nav{display:flex;justify-content:space-between;align-items:center;padding
 .settings-toggle{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:10px;margin-left:8px;color:inherit}
 .settings-panel{position:fixed;right:18px;top:calc(64px + 1rem);z-index:220}
 .settings-inner{padding:14px;width:260px}
+.settings-panel{opacity:0;transform:translateY(-6px);transition:opacity 260ms ease, transform 260ms cubic-bezier(.2,.9,.3,1);pointer-events:none}
+.settings-panel.open{opacity:1;transform:none;pointer-events:auto}
+.settings-inner{transform:translateY(-6px) scale(.992);transition:transform 320ms cubic-bezier(.2,.9,.3,1), opacity 220ms ease}
+.settings-panel.open .settings-inner{transform:none}
 .setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
 .settings-close{position:absolute;right:8px;top:8px;background:transparent;border:none;color:inherit}
 
@@ -151,12 +155,20 @@ body {
 }
 
 /* Light theme: make background bright/white and reduce noise */
-html.light-theme .bg-gradient{
+/* Use an overlay pseudo-element to fade the background into light mode smoothly */
+.bg-gradient::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   background: radial-gradient(1000px circle at 10% 20%, rgba(102,163,255,0.08), transparent 20%),
               radial-gradient(800px circle at 90% 80%, rgba(250,200,200,0.04), transparent 20%),
               linear-gradient(180deg,#ffffff 0%, #f7fafc 100%);
-  z-index: -2;
+  opacity: 0;
+  transition: opacity 1200ms ease;
+  z-index: -1;
 }
+html.light-theme .bg-gradient::after{ opacity: 1 }
 html.light-theme .bg-noise{ opacity: 0.06; filter:none }
 
 /* ================= NAV ================= */
@@ -185,8 +197,9 @@ html.light-theme .bg-noise{ opacity: 0.06; filter:none }
 }
 
 .nav-links {
-  display: none;
+  display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .nav-links a {
@@ -200,6 +213,14 @@ html.light-theme .bg-noise{ opacity: 0.06; filter:none }
 .nav-links a.active{ background: rgba(255,255,255,0.06); box-shadow: 0 6px 20px rgba(2,6,23,0.45) }
 
 .nav.open .nav-links { display:flex }
+
+/* Mobile dropdown animation for nav */
+@media (max-width: 880px){
+  .nav-toggle{display:inline-flex}
+  .nav-links{position:absolute;right:12px;top:58px;flex-direction:column;background:var(--glass-bg);border:1px solid var(--glass-border);padding:10px;border-radius:10px;backdrop-filter:blur(8px);opacity:0;transform:translateY(-8px) scale(.995);transition:opacity 320ms ease, transform 320ms cubic-bezier(.2,.9,.3,1);pointer-events:none;min-width:180px}
+  .nav-links a{padding:8px 10px}
+  .nav.open .nav-links{opacity:1;transform:none;pointer-events:auto}
+}
 
 /* ================= HERO ================= */
 
