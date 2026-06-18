@@ -94,6 +94,13 @@
   window.addEventListener('load', ()=>{
     document.body.style.transition = 'opacity .4s ease';
     document.body.style.opacity = '1';
+      // initialize theme from localStorage or system
+      const saved = localStorage.getItem('theme');
+      const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      const useLight = saved === 'light' || (!saved && prefersLight);
+      if(useLight) document.documentElement.classList.add('light-theme');
+      const themeToggle = document.getElementById('themeToggle');
+      if(themeToggle) themeToggle.checked = useLight;
   });
 
 })();
@@ -189,6 +196,44 @@ document.addEventListener('keydown', (e)=>{
     morphs.forEach(m => { if(m.parentNode) m.parentNode.removeChild(m); });
     const ov = document.getElementById('overlay'); if(ov){ ov.classList.remove('open'); ov.hidden = true; }
     document.body.style.overflow = '';
+  }
+});
+
+// Settings panel interactions
+const settingsToggle = document.getElementById('settingsToggle');
+const settingsPanel = document.getElementById('settingsPanel');
+const settingsClose = document.getElementById('settingsClose');
+const themeToggle = document.getElementById('themeToggle');
+
+if(settingsToggle && settingsPanel){
+  settingsToggle.addEventListener('click', ()=>{
+    const open = settingsPanel.hasAttribute('hidden');
+    if(open){ settingsPanel.hidden = false; settingsPanel.classList.add('open'); }
+    else { settingsPanel.hidden = true; settingsPanel.classList.remove('open'); }
+  });
+}
+if(settingsClose && settingsPanel){
+  settingsClose.addEventListener('click', ()=>{ settingsPanel.hidden = true; settingsPanel.classList.remove('open'); });
+}
+
+// Toggle theme and persist
+if(themeToggle){
+  themeToggle.addEventListener('change', (e)=>{
+    if(e.target.checked){
+      document.documentElement.classList.add('light-theme');
+      localStorage.setItem('theme','light');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+      localStorage.setItem('theme','dark');
+    }
+  });
+}
+
+// Close settings clicking outside
+document.addEventListener('click', (e)=>{
+  if(settingsPanel && !settingsPanel.hidden){
+    const inside = settingsPanel.contains(e.target) || (settingsToggle && settingsToggle.contains(e.target));
+    if(!inside){ settingsPanel.hidden = true; settingsPanel.classList.remove('open'); }
   }
 });
 
