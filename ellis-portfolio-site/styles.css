@@ -35,7 +35,7 @@ header.nav{display:flex;justify-content:space-between;align-items:center;padding
 
 /* settings button */
 .settings-toggle{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:10px;margin-left:8px;color:inherit}
-.settings-panel{position:fixed;right:18px;top:64px;z-index:220}
+.settings-panel{position:fixed;right:18px;top:calc(64px + 1rem);z-index:220}
 .settings-inner{padding:14px;width:260px}
 .setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
 .settings-close{position:absolute;right:8px;top:8px;background:transparent;border:none;color:inherit}
@@ -76,6 +76,15 @@ html.light-theme .nav-toggle, html.light-theme .settings-toggle{
   border: 1px solid rgba(0,0,0,0.08);
   color: var(--text);
 }
+
+/* animated slide switch */
+#themeToggle{ appearance:none; -webkit-appearance:none; width:46px; height:26px; background: rgba(255,255,255,0.12); border-radius:999px; position:relative; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition: background .28s ease, border-color .28s ease }
+#themeToggle::after{ content:''; position:absolute; left:3px; top:3px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 4px 10px rgba(2,6,23,0.3); transition: transform .28s cubic-bezier(.2,.9,.3,1), background .28s ease }
+#themeToggle:checked{ background: linear-gradient(90deg,var(--accent), #60a5fa); border-color: rgba(0,0,0,0.08) }
+#themeToggle:checked::after{ transform: translateX(20px); background: #052026 }
+
+/* theme fade transitions */
+html, body, .bg-gradient, .glass, .card, .morph-card, .nav, .nav-links a, .hero-buttons button { transition: background 1200ms ease, color 1200ms ease, box-shadow 1200ms ease, border-color 1200ms ease, filter 1200ms ease }
 
 
 .hero{padding:80px 24px 160px;position:relative}
