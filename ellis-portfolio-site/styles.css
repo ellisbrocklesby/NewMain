@@ -65,6 +65,18 @@ html.light-theme .card, html.light-theme .morph-card, html.light-theme .profile-
   box-shadow: 0 10px 30px rgba(2,6,23,0.06);
 }
 
+/* Buttons and toggles invert in light mode: darker surfaces with dark text */
+html.light-theme .hero-buttons button{
+  background: rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.08);
+  color: var(--text);
+}
+html.light-theme .nav-toggle, html.light-theme .settings-toggle{
+  background: rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.08);
+  color: var(--text);
+}
+
 
 .hero{padding:80px 24px 160px;position:relative}
 .hero-content{max-width:1100px;margin:0 auto;display:flex;gap:36px;align-items:flex-start}
