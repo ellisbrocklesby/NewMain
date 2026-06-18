@@ -255,6 +255,8 @@ if(hobbiesContainer){
   });
 }
 
+
+
 // overlay click is handled per interaction (morph/modal) to avoid conflicts
 
 // Close morphs / overlay on Escape
@@ -319,6 +321,28 @@ if(themeToggle){
     }
   });
 }
+
+// Robust handler for Disable Animations toggle (bind outside load to ensure it works)
+(() => {
+  const disableId = 'disableAnimationsToggle';
+  const sel = '.glass, .card, .thumb, .showcase-main, .hero-top';
+  const disable = document.getElementById(disableId);
+  if(!disable) return;
+  // initialize from storage if not already set by load handler
+  const saved = localStorage.getItem('disableAnimations') === '1';
+  disable.checked = saved;
+  const applyOff = ()=>{
+    document.documentElement.classList.add('no-animations');
+    localStorage.setItem('disableAnimations','1');
+    document.querySelectorAll(sel).forEach(el=> el.style.transform = '');
+    const bg = document.querySelector('.bg-gradient'); if(bg) bg.style.transform = '';
+  };
+  const applyOn = ()=>{
+    document.documentElement.classList.remove('no-animations');
+    localStorage.removeItem('disableAnimations');
+  };
+  disable.addEventListener('change', (e)=>{ if(e.target.checked) applyOff(); else applyOn(); });
+})();
 
 // Close settings clicking outside
 document.addEventListener('click', (e)=>{

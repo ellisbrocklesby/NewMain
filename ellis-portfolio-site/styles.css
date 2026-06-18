@@ -104,6 +104,7 @@ html, body, .bg-gradient, .glass, .card, .morph-card, .nav, .nav-links a, .hero-
 .avatar{width:96px;height:96px;border-radius:10px;object-fit:cover}
 .avatar-fallback{width:96px;height:96px;border-radius:10px;background:linear-gradient(135deg,#6ee7b7,#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:700}
 
+
 .section{padding:80px 24px}
 .glass{transition:box-shadow .25s ease;}
 
