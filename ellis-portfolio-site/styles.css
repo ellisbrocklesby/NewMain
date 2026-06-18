@@ -553,6 +553,13 @@ html{ -webkit-text-size-adjust:100%; }
   /* ensure morph occupies readable area and doesn't overflow */
   .morph-card{left:4% !important; top:6% !important; width:92% !important; height:auto !important; max-height:86vh}
 
+  /* Stack morph media above text on small screens */
+  .morph-inner{ flex-direction: column }
+  .morph-media{ width:100%; flex:0 0 auto; height:200px }
+  .morph-media img{ height:100%; object-fit:cover }
+  .morph-body{ padding:12px }
+  .morph-close{ right:10px; top:10px }
+
   /* reduce visual noise on small screens */
   .hero-glow{display:none}
   .glass::after{display:none}

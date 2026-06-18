@@ -1,37 +1,38 @@
 [
   {
     "title": "PC Building",
-    "content": "Building custom PCs focused on performance, airflow, and reliability. I enjoy selecting parts, optimizing cooling setups, cable management, and benchmarking systems to test real-world performance. I also experiment with upgrades, overclocking, and troubleshooting hardware issues to get the most out of each build.",
+    "image": "assets/hobbies/cube.jpg",
+    "link": "https://www.worldcubeassociation.org/persons/2022HARR08"
     "image": "assets/hobbies/pc.jpg"
   },
   {
     "title": "Servers & Linux",
-    "content": "Running home servers and experimenting with Linux systems. This includes setting up self-hosted services, managing containers, learning networking fundamentals, and automating tasks. I also explore different distros and enjoy understanding how systems run at a deeper level beyond standard user interfaces.",
+    "content": "Home labs, Linux servers, networking and container setups.",
     "image": "assets/hobbies/servers.jpg"
   },
   {
     "title": "Speed Cubing",
-    "content": "Practicing speed cubing with a focus on improving algorithms, recognition, and finger tricks. I work on reducing solve times through repetition, learning efficient methods, and tracking averages. It’s a mix of pattern recognition, memory, and fast execution under pressure.",
+    "content": "Competitive cubing and algorithms practice.",
     "image": "assets/hobbies/cube.jpg"
   },
   {
     "title": "3D Printing",
-    "content": "Designing and printing functional parts, prototypes, and custom creations. I use 3D printing for practical engineering ideas as well as creative projects, focusing on design optimization, tolerances, and material behavior. It often connects with CAD work and real-world problem solving.",
+    "content": "Designing and printing functional parts and prototypes.",
     "image": "assets/hobbies/3dprint.jpg"
   },
   {
     "title": "Karate",
-    "content": "Training in karate with a focus on discipline, technique, and physical conditioning. I practice forms, sparring, and controlled movement while building consistency, reflexes, and mental focus. It also helps with overall fitness and mindset development.",
+    "content": "Training and discipline in martial arts.",
     "image": "assets/hobbies/karate.jpg"
   },
   {
     "title": "FPV / Drones",
-    "content": "Flying and building FPV drones, including tuning flight controllers, improving stability, and testing different frame and motor setups. I enjoy both the technical side of building and the creative side of flying cinematic or freestyle lines through environments.",
+    "content": "First-person view drone flying, builds, and tuning.",
     "image": "assets/hobbies/fpv.jpg"
   },
   {
     "title": "Mechatronics / Engineering",
-    "content": "Exploring embedded systems, sensors, electronics, and mechanical design. I work on small prototypes that combine software and hardware, learning how systems interact in real-world applications. This includes CAD modelling, circuit basics, and automation concepts.",
+    "content": "Embedded systems, sensors, and mechanical prototyping.",
     "image": "assets/hobbies/mechatronics.jpg"
   }
 ]

@@ -219,6 +219,10 @@ let hobbies = [];
 const hobbiesContainer = document.getElementById('hobbiesGrid') || document.querySelector('.hobbies-grid');
 
 function renderHobbies(list){
+  if(!hobbiesContainer){
+    console.warn('renderHobbies: no hobbies container found');
+    return;
+  }
   hobbiesContainer.innerHTML = '';
   list.forEach(item=>{
     const btn = document.createElement('button');
@@ -236,26 +240,28 @@ function renderHobbies(list){
     morphOpen(h, title, content);
   }));
 }
-
-// Prefer inline JSON (`#hobbiesData`) if present (works even with file://)
-const inlineEl = document.getElementById('hobbiesData');
-if(inlineEl){
-  try{
-    const parsed = JSON.parse(inlineEl.textContent);
-    if(Array.isArray(parsed) && parsed.length){ renderHobbies(parsed); }
-    else { renderHobbies([]); attachLocalLoader(hobbiesContainer); }
-  }catch(e){ console.warn('Failed to parse inline hobbiesData', e); renderHobbies([]); attachLocalLoader(hobbiesContainer); }
-} else {
-  // try to load JSON manifest for hobbies; fallback to built-in defaults
-  fetch(hobbiesContainer?.dataset?.source || 'assets/data/hobbies.json').then(r=> r.json()).then(list=>{
-    if(Array.isArray(list) && list.length) renderHobbies(list);
-    else {
+// try to load JSON manifest for hobbies; fallback to inline or defaults
+(() => {
+  const src = (hobbiesContainer && hobbiesContainer.dataset && hobbiesContainer.dataset.source) ? hobbiesContainer.dataset.source : 'assets/data/hobbies.json';
+  fetch(src).then(r=> r.json()).then(list=>{
+    try{
+      if(Array.isArray(list) && list.length) return renderHobbies(list);
       // empty manifest: render nothing and offer local file loader
       renderHobbies([]);
       attachLocalLoader(hobbiesContainer);
+    }catch(err){
+      console.error('renderHobbies error', err);
     }
   }).catch(err=>{
     console.warn('Failed to load hobbies.json', err);
+    // Attempt to read inline JSON in the page (helps when opening via file://)
+    try{
+      const inpage = document.getElementById('hobbiesData');
+      if(inpage){
+        const parsed = JSON.parse(inpage.textContent);
+        if(Array.isArray(parsed) && parsed.length){ renderHobbies(parsed); return; }
+      }
+    }catch(e){ console.warn('Failed to parse in-page hobbiesData', e); }
     // final fallback: minimal set
     renderHobbies([
       { title: 'PC Building', content: 'Building custom PCs, cooling, and benchmarking.', image: 'assets/hobbies/pc.jpg' },
@@ -263,7 +269,7 @@ if(inlineEl){
       { title: 'Speed Cubing', content: 'Competitive cubing and algorithms practice.', image: 'assets/hobbies/cube.jpg' }
     ]);
   });
-}
+})();
 
 // Add a small local-file loader UI so users can load `hobbies.json` from disk when fetch is blocked
 function attachLocalLoader(container){
@@ -548,7 +554,34 @@ function morphOpen(button, title, content){
   const body = document.createElement('div'); body.className = 'morph-body';
   const h = document.createElement('div'); h.className = 'morph-title'; h.textContent = title;
   const closeBtn = document.createElement('button'); closeBtn.className = 'morph-close'; closeBtn.textContent = '✕';
-  const contentDiv = document.createElement('div'); contentDiv.className = 'morph-content'; contentDiv.textContent = content || '';
+  const contentDiv = document.createElement('div'); contentDiv.className = 'morph-content';
+
+  // If the hobby has an associated external link (e.g., Speed Cubing WCA profile), embed it if possible and provide an Open button
+  const link = button.dataset.link || button.getAttribute('data-link') || (title && title.toLowerCase().includes('speed cubing') ? 'https://www.worldcubeassociation.org/persons/2022HARR08' : '');
+  if(link){
+    // show iframe preview (may be blocked by X-Frame-Options); always show an external button
+    const frameWrap = document.createElement('div'); frameWrap.style.width = '100%'; frameWrap.style.height = '280px'; frameWrap.style.background = '#061018'; frameWrap.style.overflow = 'hidden';
+    const iframe = document.createElement('iframe'); iframe.src = link; iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = '0'; iframe.setAttribute('loading','lazy');
+    frameWrap.appendChild(iframe);
+    contentDiv.appendChild(frameWrap);
+    const linkRow = document.createElement('div'); linkRow.style.display = 'flex'; linkRow.style.gap = '8px'; linkRow.style.marginTop = '8px';
+    const openBtn = document.createElement('a'); openBtn.className = 'btn-ghost'; openBtn.textContent = 'Open on WCA'; openBtn.href = link; openBtn.target = '_blank'; openBtn.rel = 'noopener noreferrer';
+    linkRow.appendChild(openBtn);
+    // Instagram & YouTube buttons (use data attributes if provided on the hobby entry)
+    const igUrl = button.dataset.instagram || button.getAttribute('data-instagram') || button.dataset.ig || button.getAttribute('data-ig') || '';
+    const ytUrl = button.dataset.youtube || button.getAttribute('data-youtube') || button.dataset.yt || button.getAttribute('data-yt') || '';
+    const igBtn = document.createElement('a'); igBtn.className = 'btn-ghost social-ig'; igBtn.textContent = 'Instagram'; igBtn.href = igUrl || '#'; igBtn.target = '_blank'; igBtn.rel = 'noopener noreferrer';
+    if(!igUrl) igBtn.title = 'Instagram link not configured';
+    linkRow.appendChild(igBtn);
+    const ytBtn = document.createElement('a'); ytBtn.className = 'btn-ghost social-yt'; ytBtn.textContent = 'YouTube'; ytBtn.href = ytUrl || '#'; ytBtn.target = '_blank'; ytBtn.rel = 'noopener noreferrer';
+    if(!ytUrl) ytBtn.title = 'YouTube link not configured';
+    linkRow.appendChild(ytBtn);
+    contentDiv.appendChild(linkRow);
+    // also append the textual content below if provided
+    if(content){ const p = document.createElement('div'); p.style.marginTop = '8px'; p.textContent = content; contentDiv.appendChild(p); }
+  } else {
+    contentDiv.textContent = content || '';
+  }
 
   body.appendChild(h);
   body.appendChild(closeBtn);
@@ -620,7 +653,15 @@ function morphOpen(button, title, content){
     }, { once: true });
   }
 
-  closeBtn.addEventListener('click', closeMorph);
+  // ensure morph and close button sit above overlay
+  el.style.zIndex = '99999';
+  el.style.pointerEvents = 'auto';
+  closeBtn.style.zIndex = '100000';
+  closeBtn.style.pointerEvents = 'auto';
+  // stop propagation so the overlay click handler doesn't intercept the close
+  const closeHandler = (ev)=>{ ev.stopPropagation(); ev.preventDefault && ev.preventDefault(); closeMorph(); };
+  closeBtn.addEventListener('click', closeHandler);
+  closeBtn.addEventListener('touchend', (ev)=>{ ev.stopPropagation(); ev.preventDefault && ev.preventDefault(); closeMorph(); });
   overlay.addEventListener('click', closeMorph, { once: true });
 }
 

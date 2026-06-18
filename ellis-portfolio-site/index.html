@@ -135,15 +135,51 @@
 <section id="hobbies" class="section">
   <h2>Hobbies</h2>
 
-  <div class="grid hobbies-grid">
-    <button class="card glass hobby" data-title="PC Building" data-content="Building custom PCs focused on performance, airflow, and reliability. I enjoy selecting parts, optimizing cooling setups, cable management, and benchmarking systems to test real-world performance. I also experiment with upgrades, overclocking, and troubleshooting hardware issues to get the most out of each build.">PC Building</button>
-    <button class="card glass hobby" data-title="Servers & Linux" data-content="Running home servers and experimenting with Linux systems. This includes setting up self-hosted services, managing containers, learning networking fundamentals, and automating tasks. I also explore different distros and enjoy understanding how systems run at a deeper level beyond standard user interfaces.">Servers & Linux</button>
-    <button class="card glass hobby" data-title="Speed Cubing" data-content="Practicing speed cubing with a focus on improving algorithms, recognition, and finger tricks. I work on reducing solve times through repetition, learning efficient methods, and tracking averages. It’s a mix of pattern recognition, memory, and fast execution under pressure.">Speed Cubing</button>
-    <button class="card glass hobby" data-title="3D Printing" data-content="Designing and printing functional parts, prototypes, and custom creations. I use 3D printing for practical engineering ideas as well as creative projects, focusing on design optimization, tolerances, and material behavior. It often connects with CAD work and real-world problem solving." data-image="assets/hobbies/3dprint.jpg">3D Printing</button>
-    <button class="card glass hobby" data-title="Karate" data-content="Training in karate with a focus on discipline, technique, and physical conditioning. I practice forms, sparring, and controlled movement while building consistency, reflexes, and mental focus. It also helps with overall fitness and mindset development.">Karate</button>
-    <button class="card glass hobby" data-title="FPV / Drones" data-content="Flying and building FPV drones, including tuning flight controllers, improving stability, and testing different frame and motor setups. I enjoy both the technical side of building and the creative side of flying cinematic or freestyle lines through environments." data-image="assets/hobbies/fpv.jpg">FPV / Drones</button>
-    <button class="card glass hobby" data-title="Mechatronics / Engineering" data-content="Exploring embedded systems, sensors, electronics, and mechanical design. I work on small prototypes that combine software and hardware, learning how systems interact in real-world applications. This includes CAD modelling, circuit basics, and automation concepts." data-image="assets/hobbies/mechatronics.jpg">Mechatronics / Engineering</button>
+  <div id="hobbiesGrid" class="grid hobbies-grid" data-source="assets/data/hobbies.json">
+    <!-- Hobby tiles are rendered from `assets/data/hobbies.json`.
+         Edit that file to change titles, descriptions and optional `image` paths.
+         Example entry: { "title": "PC Building", "content": "Building custom PCs...", "image": "assets/hobbies/pc.jpg" }
+    -->
   </div>
+  <script id="hobbiesData" type="application/json">
+    [
+      {
+        "title": "PC Building",
+        "content": "Building custom PCs focused on performance, airflow, and reliability. I enjoy selecting parts, improving cooling setups, cable management, and benchmarking hardware. I also test upgrades, troubleshoot issues, and experiment with performance tuning. I mainly build PCs to get an optimal setup for my 3D, VFX, and CAD work. My current system includes a Ryzen 5 5600X, RTX 5070 OC (Gigabyte), 48GB DDR4 3200MHz, 1TB NVMe SSD, 1TB HDD, 500GB HDD, Deepcool CG530 case, 750W bronze PSU, Cooler Master 2-fan AIO, and Windows 11.",
+        "image": "assets/hobbies/pc.jpg"
+      },
+      {
+        "title": "Servers & Linux",
+        "content": "Running home servers and working with Linux systems. This includes self-hosted services, container setups, networking basics, and system automation. I also explore different Linux environments and how systems operate under the hood.",
+        "image": "assets/hobbies/servers.jpg"
+      },
+      {
+        "title": "Speed Cubing",
+        "content": "Although I don’t speed cube much anymore, it is still a hobby I really enjoy. It’s always fun to pick up a cube and just solve it. I have competed before at WCA competitions, and my personal best for 3x3 is 9.48 seconds. These days I average closer to 20 seconds, but I still enjoy the challenge and the satisfaction of solving it.",
+        "image": "assets/hobbies/cube.jpg"
+      },
+      {
+        "title": "3D Printing",
+        "content": "Designing and printing functional parts, prototypes, and custom models. I focus on CAD design, print settings, tolerances, and turning ideas into physical objects.",
+        "image": "assets/hobbies/3dprint.jpg"
+      },
+      {
+        "title": "Karate",
+        "content": "Training in karate with focus on discipline, technique, and fitness. Includes forms, sparring, and improving control, reflexes, and overall conditioning.",
+        "image": "assets/hobbies/karate.jpg"
+      },
+      {
+        "title": "FPV / Drones",
+        "content": "Flying and building FPV drones, tuning flight controllers, and testing different setups. I enjoy both technical building and creative flying for cinematic and freestyle shots.",
+        "image": "assets/hobbies/fpv.jpg"
+      },
+      {
+        "title": "Mechatronics / Engineering",
+        "content": "Working with electronics, sensors, CAD, and mechanical systems. I build small prototypes that combine hardware and software, focusing on real-world engineering concepts and automation.",
+        "image": "assets/hobbies/mechatronics.jpg"
+      }
+    ]
+  </script>
 </section>
 
 <!-- Modal / overlay for hobby details -->
