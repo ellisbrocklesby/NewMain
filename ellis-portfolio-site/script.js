@@ -140,6 +140,28 @@ document.querySelectorAll('.nav-links a[href^="#"]').forEach(a=>{
   });
 });
 
+// Contact form handler: opens user's mail client prefilled to contact@ellisbrocklesby.com
+const contactForm = document.getElementById('contactForm');
+if(contactForm){
+  contactForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const from = document.getElementById('fromEmail').value.trim();
+    const subject = document.getElementById('subject').value.trim();
+    const message = document.getElementById('message').value.trim();
+    if(!from || !subject || !message){
+      alert('Please complete all fields before sending.');
+      return;
+    }
+
+    const to = 'contact@ellisbrocklesby.com';
+    const body = encodeURIComponent('From: ' + from + '\n\n') + encodeURIComponent(message);
+    const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${body}`;
+    // open mail client
+    window.location.href = mailto;
+  });
+}
+
+
 // Hobby modal behavior
 const hobbies = document.querySelectorAll('.hobby');
 const overlay = document.getElementById('overlay');

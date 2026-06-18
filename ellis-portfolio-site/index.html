@@ -120,7 +120,49 @@
 <!-- ================= CONTACT ================= -->
 <section id="contact" class="section glass">
   <h2>Contact</h2>
-  <p class="lorem">email@example.com — Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent libero.</p>
+
+  <div class="contact-grid">
+    <form id="contactForm" class="contact-form" autocomplete="on">
+      <label for="fromEmail">Your email</label>
+      <input id="fromEmail" name="fromEmail" type="email" placeholder="you@domain.com" required>
+
+      <label for="subject">Subject</label>
+      <input id="subject" name="subject" type="text" placeholder="Brief subject" required>
+
+      <label for="message">Message</label>
+      <textarea id="message" name="message" rows="6" placeholder="Type your message here" required></textarea>
+
+      <div class="contact-actions">
+        <button type="submit" class="btn-primary">Send via email</button>
+      </div>
+
+      <p class="note">Note: clicking "Send via email" will open your mail app to send to <strong>contact@ellisbrocklesby.com</strong>.</p>
+    </form>
+
+    <aside class="contact-aside">
+      <h3>Social</h3>
+      <div class="social-links">
+        <a class="social" href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+          <!-- Instagram SVG -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2"/><circle cx="17.5" cy="6.5" r="0.7" fill="currentColor"/></svg>
+          <span>Instagram</span>
+        </a>
+        <a class="social" href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+          <!-- Facebook SVG -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 8h2V5h-2c-1.1 0-2 .9-2 2v1H11v3h2v6h3v-6h2l1-3h-3V7c0-.55.45-1 1-1z" fill="currentColor"/></svg>
+          <span>Facebook</span>
+        </a>
+        <a class="social" href="#" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+          <!-- YouTube SVG -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 15l5.2-3L10 9v6z" fill="currentColor"/><rect x="3" y="6" width="18" height="12" rx="3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          <span>YouTube</span>
+        </a>
+      </div>
+
+      <p class="small">Or send manually to <a href="mailto:contact@ellisbrocklesby.com">contact@ellisbrocklesby.com</a></p>
+    </aside>
+  </div>
+
 </section>
 
 <footer>
