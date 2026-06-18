@@ -1,8 +1,102 @@
-function scrollToSection(id) {
-  document.getElementById(id).scrollIntoView({
-    behavior: "smooth"
+(function(){
+  'use strict';
+
+  // Respect reduced motion
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Helpers
+  function lerp(a,b,t){return a+(b-a)*t}
+
+  // Elements to warp
+  const warpSelector = '.glass, .card, .thumb, .showcase-main, .hero-top';
+  const warpEls = Array.from(document.querySelectorAll(warpSelector));
+
+  // assign default depth weights when not present
+  warpEls.forEach(el=>{
+    if(!el.dataset.warpDepth){
+      if(el.classList.contains('card')) el.dataset.warpDepth = '1.6';
+      else if(el.classList.contains('thumb')) el.dataset.warpDepth = '2.2';
+      else if(el.classList.contains('showcase-main')) el.dataset.warpDepth = '1.0';
+      else el.dataset.warpDepth = '1.0';
+    }
+    el.style.willChange = 'transform';
   });
-}
+
+  let lastY = window.scrollY, lastTime = performance.now(), vel = 0, smoothVel = 0;
+
+  function onScroll(){
+    const now = performance.now();
+    const y = window.scrollY;
+    const dt = Math.max(16, now - lastTime);
+    const instant = (y - lastY) / dt; // px per ms
+    // scale to px per frame-ish
+    vel = instant * 16;
+    lastY = y; lastTime = now;
+  }
+
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', ()=>{ /* layout may change */ }, {passive:true});
+
+  function raf(){
+    // ultra-subtle smoothing for near-static surface tension
+    smoothVel = lerp(smoothVel, vel, 0.03);
+
+    // apply transforms
+    const vh = window.innerHeight || 1;
+    warpEls.forEach(el=>{
+      const rect = el.getBoundingClientRect();
+      const centerY = rect.top + rect.height/2;
+      const dist = (centerY - vh/2) / (vh/2); // -1..1
+      const depth = parseFloat(el.dataset.warpDepth || 1);
+
+      // dialed way down: very slight, surface-tension feel
+      const speedEffect = smoothVel * depth * 0.5; // minimal amplify
+      const translateY = -dist * depth * 1.2 + speedEffect; // tiny parallax + speed
+      const rotateX = dist * depth * 0.3 - smoothVel * 0.05;
+      const skewY = smoothVel * depth * 0.08;
+      const scale = 1 + Math.abs(smoothVel) * depth * 0.0002;
+
+      // very tight clamps for minimal movement
+      const tY = Math.max(-6, Math.min(6, translateY));
+      const rX = Math.max(-0.8, Math.min(0.8, rotateX));
+      const sY = Math.max(-0.4, Math.min(0.4, skewY));
+
+      // apply
+      if(!reduce) el.style.transform = `perspective(900px) translate3d(0, ${tY}px, 0) rotateX(${rX}deg) skewY(${sY}deg) scale(${scale})`;
+    });
+
+    // subtle background parallax
+    const bg = document.querySelector('.bg-gradient');
+    if(bg && !reduce){
+      bg.style.transform = `translateY(${smoothVel * -2}px)`;
+    }
+
+    // decay velocity toward 0 (strong damping for quick calm)
+    vel = lerp(vel, 0, 0.18);
+
+    requestAnimationFrame(raf);
+  }
+
+  // Kick off
+  requestAnimationFrame(raf);
+
+  // scroll helper referenced inline in HTML
+  window.scrollToSection = function(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+  };
+
+  // Hobby modal interactions (handled by morphing implementation later)
+
+
+  // small startup animation
+  window.addEventListener('load', ()=>{
+    document.body.style.transition = 'opacity .4s ease';
+    document.body.style.opacity = '1';
+  });
+
+})();
 
 /* scroll reveal animation */
 const observer = new IntersectionObserver(entries => {
@@ -39,30 +133,6 @@ const modalTitle = document.getElementById('modalTitle');
 const modalContent = document.getElementById('modalContent');
 const modalClose = document.getElementById('modalClose');
 
-function openModal(title, content){
-  modalTitle.textContent = title;
-  modalContent.textContent = content;
-  overlay.hidden = false;
-  modal.hidden = false;
-  // add animation classes
-  requestAnimationFrame(()=>{
-    overlay.classList.add('open');
-    modal.classList.add('open');
-  });
-  document.body.style.overflow = 'hidden';
-}
-
-function closeModal(){
-  overlay.classList.remove('open');
-  modal.classList.remove('open');
-  // wait for animation out then hide
-  setTimeout(()=>{
-    overlay.hidden = true;
-    modal.hidden = true;
-    document.body.style.overflow = '';
-  }, 260);
-}
-
 if(hobbies.length){
   hobbies.forEach(h => {
     h.addEventListener('click', ()=>{
@@ -74,10 +144,15 @@ if(hobbies.length){
 }
 
 // overlay click is handled per interaction (morph/modal) to avoid conflicts
-if(modalClose) modalClose.addEventListener('click', closeModal);
 
+// Close morphs / overlay on Escape
 document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape') closeModal();
+  if(e.key === 'Escape'){
+    const morphs = document.querySelectorAll('.morph-card');
+    morphs.forEach(m => { if(m.parentNode) m.parentNode.removeChild(m); });
+    const ov = document.getElementById('overlay'); if(ov){ ov.classList.remove('open'); ov.hidden = true; }
+    document.body.style.overflow = '';
+  }
 });
 
 // Morphing open/close implementation for hobby buttons
