@@ -125,6 +125,21 @@ if(navToggle){
   });
 }
 
+// Smooth scroll for nav links and close mobile panel on click
+document.querySelectorAll('.nav-links a[href^="#"]').forEach(a=>{
+  a.addEventListener('click', e=>{
+    e.preventDefault();
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    // close mobile nav if open
+    if(nav && nav.classList.contains('open')){
+      nav.classList.remove('open');
+      if(navToggle) navToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+
 // Hobby modal behavior
 const hobbies = document.querySelectorAll('.hobby');
 const overlay = document.getElementById('overlay');
