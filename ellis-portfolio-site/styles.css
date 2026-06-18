@@ -87,6 +87,12 @@ html.light-theme .nav-toggle, html.light-theme .settings-toggle{
 #themeToggle:checked{ background: linear-gradient(90deg,var(--accent), #60a5fa); border-color: rgba(0,0,0,0.08) }
 #themeToggle:checked::after{ transform: translateX(20px); background: #052026 }
 
+/* matchable slide for disable animations toggle */
+#disableAnimationsToggle{ appearance:none; -webkit-appearance:none; width:46px; height:26px; background: rgba(255,255,255,0.08); border-radius:999px; position:relative; cursor:pointer; border:1px solid rgba(255,255,255,0.06); transition: background .28s ease, border-color .28s ease }
+#disableAnimationsToggle::after{ content:''; position:absolute; left:3px; top:3px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 4px 10px rgba(2,6,23,0.18); transition: transform .28s cubic-bezier(.2,.9,.3,1), background .28s ease }
+#disableAnimationsToggle:checked{ background: linear-gradient(90deg,#cbd5e1, #94a3b8); border-color: rgba(0,0,0,0.06) }
+#disableAnimationsToggle:checked::after{ transform: translateX(20px); background: #0b1220 }
+
 /* theme fade transitions */
 html, body, .bg-gradient, .glass, .card, .morph-card, .nav, .nav-links a, .hero-buttons button { transition: background 1200ms ease, color 1200ms ease, box-shadow 1200ms ease, border-color 1200ms ease, filter 1200ms ease }
 
@@ -115,6 +121,12 @@ html, body, .bg-gradient, .glass, .card, .morph-card, .nav, .nav-links a, .hero-
 
 :root.prefers-reduced-motion, @media (prefers-reduced-motion: reduce){
   .liquid-layer, .warp-tilt{transition:none}
+}
+
+/* Explicit user toggle to disable animations */
+html.no-animations *, html.no-animations *::before, html.no-animations *::after{
+  transition: none !important;
+  animation: none !important;
 }
 
 /* Subtle glow */

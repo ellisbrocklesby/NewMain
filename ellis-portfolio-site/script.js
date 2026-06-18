@@ -1,8 +1,11 @@
 (function(){
   'use strict';
 
-  // Respect reduced motion
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Respect reduced motion and allow user-controlled 'disable animations' override
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function reducedMotionEnabled(){
+    return prefersReduce || document.documentElement.classList.contains('no-animations');
+  }
 
   // Helpers
   function lerp(a,b,t){return a+(b-a)*t}
@@ -61,13 +64,13 @@
       const rX = Math.max(-0.8, Math.min(0.8, rotateX));
       const sY = Math.max(-0.4, Math.min(0.4, skewY));
 
-      // apply
-      if(!reduce) el.style.transform = `perspective(900px) translate3d(0, ${tY}px, 0) rotateX(${rX}deg) skewY(${sY}deg) scale(${scale})`;
+      // apply (skip if reduced motion requested)
+      if(!reducedMotionEnabled()) el.style.transform = `perspective(900px) translate3d(0, ${tY}px, 0) rotateX(${rX}deg) skewY(${sY}deg) scale(${scale})`;
     });
 
     // subtle background parallax
     const bg = document.querySelector('.bg-gradient');
-    if(bg && !reduce){
+    if(bg && !reducedMotionEnabled()){
       bg.style.transform = `translateY(${smoothVel * -2}px)`;
     }
 
@@ -79,6 +82,9 @@
 
   // Kick off
   requestAnimationFrame(raf);
+
+  // expose check to global code so morphs can react
+  window.reducedMotionEnabled = reducedMotionEnabled;
 
   // scroll helper referenced inline in HTML
   window.scrollToSection = function(id){
@@ -101,6 +107,23 @@
       if(useLight) document.documentElement.classList.add('light-theme');
       const themeToggle = document.getElementById('themeToggle');
       if(themeToggle) themeToggle.checked = useLight;
+      // initialize disable-animations toggle
+      const disableToggle = document.getElementById('disableAnimationsToggle');
+      const savedDisable = localStorage.getItem('disableAnimations') === '1';
+      if(savedDisable) document.documentElement.classList.add('no-animations');
+      if(disableToggle) disableToggle.checked = savedDisable;
+      if(disableToggle) disableToggle.addEventListener('change', (e)=>{
+        if(e.target.checked){
+          document.documentElement.classList.add('no-animations');
+          localStorage.setItem('disableAnimations','1');
+          // clear JS transforms so elements rest
+          document.querySelectorAll('.glass, .card, .thumb, .showcase-main, .hero-top').forEach(el=> el.style.transform = '');
+          const bg = document.querySelector('.bg-gradient'); if(bg) bg.style.transform = '';
+        } else {
+          document.documentElement.classList.remove('no-animations');
+          localStorage.removeItem('disableAnimations');
+        }
+      });
   });
 
 })();
@@ -213,21 +236,29 @@ if(settingsToggle && settingsPanel){
       // allow layout to settle then show
       requestAnimationFrame(()=> settingsPanel.classList.add('open'));
     } else {
-      // close animation then hide
-      settingsPanel.classList.remove('open');
-      const onEnd = (e)=>{
-        if(e.target !== settingsPanel) return;
-        settingsPanel.hidden = true;
-        settingsPanel.removeEventListener('transitionend', onEnd);
-      };
-      settingsPanel.addEventListener('transitionend', onEnd);
+        // close animation then hide; if animations disabled, hide immediately
+        settingsPanel.classList.remove('open');
+        if(window.reducedMotionEnabled && window.reducedMotionEnabled()){
+          settingsPanel.hidden = true;
+        } else {
+          const onEnd = (e)=>{
+            if(e.target !== settingsPanel) return;
+            settingsPanel.hidden = true;
+            settingsPanel.removeEventListener('transitionend', onEnd);
+          };
+          settingsPanel.addEventListener('transitionend', onEnd);
+        }
     }
   });
 }
 if(settingsClose && settingsPanel){
   settingsClose.addEventListener('click', ()=>{
     settingsPanel.classList.remove('open');
-    settingsPanel.addEventListener('transitionend', function te(){ settingsPanel.hidden = true; settingsPanel.removeEventListener('transitionend', te); }, { once: true });
+    if(window.reducedMotionEnabled && window.reducedMotionEnabled()){
+      settingsPanel.hidden = true;
+    } else {
+      settingsPanel.addEventListener('transitionend', function te(){ settingsPanel.hidden = true; settingsPanel.removeEventListener('transitionend', te); }, { once: true });
+    }
   });
 }
 
@@ -250,7 +281,11 @@ document.addEventListener('click', (e)=>{
     const inside = settingsPanel.contains(e.target) || (settingsToggle && settingsToggle.contains(e.target));
     if(!inside){
       settingsPanel.classList.remove('open');
-      settingsPanel.addEventListener('transitionend', function te(){ settingsPanel.hidden = true; settingsPanel.removeEventListener('transitionend', te); }, { once: true });
+      if(window.reducedMotionEnabled && window.reducedMotionEnabled()){
+        settingsPanel.hidden = true;
+      } else {
+        settingsPanel.addEventListener('transitionend', function te(){ settingsPanel.hidden = true; settingsPanel.removeEventListener('transitionend', te); }, { once: true });
+      }
     }
   }
 });
@@ -298,10 +333,9 @@ function morphOpen(button, title, content){
     el.style.height = targetH + 'px';
     el.style.borderRadius = '14px';
   });
-
-  // after transition, reveal content
+  // after transition, reveal content. If animations are disabled, skip waiting.
   const onEnd = (e)=>{
-    if(e.target !== el) return;
+    if(e && e.target && e.target !== el) return;
     el.removeEventListener('transitionend', onEnd);
     h.style.transform = 'scale(1.06)';
     setTimeout(()=> h.style.transform = 'scale(1)');
@@ -309,10 +343,28 @@ function morphOpen(button, title, content){
     document.body.style.overflow = 'hidden';
   };
   el.addEventListener('transitionend', onEnd);
+  // if animations disabled, call onEnd immediately
+  if(window.reducedMotionEnabled && window.reducedMotionEnabled()){
+    // ensure final geometry is applied
+    el.style.left = targetLeft + 'px';
+    el.style.top = targetTop + 'px';
+    el.style.width = targetW + 'px';
+    el.style.height = targetH + 'px';
+    el.style.borderRadius = '14px';
+    // directly reveal content
+    onEnd({ target: el });
+  }
 
   function closeMorph(){
     contentDiv.classList.remove('show');
-    // animate back
+    // animate back (or remove immediately if animations disabled)
+    if(window.reducedMotionEnabled && window.reducedMotionEnabled()){
+      if(el && el.parentNode) el.parentNode.removeChild(el);
+      overlay.classList.remove('open');
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+      return;
+    }
     el.style.left = start.left + 'px';
     el.style.top = start.top + 'px';
     el.style.width = start.width + 'px';
