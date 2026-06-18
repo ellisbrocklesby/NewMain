@@ -208,47 +208,109 @@ if(contactForm){
 }
 
 
-// Hobby modal behavior
-const hobbies = document.querySelectorAll('.hobby');
+// Hobby modal behavior - render from JSON and attach listeners
 const overlay = document.getElementById('overlay');
 const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modalTitle');
 const modalContent = document.getElementById('modalContent');
 const modalClose = document.getElementById('modalClose');
 
-if(hobbies.length){
-  hobbies.forEach(h => {
-    h.addEventListener('click', ()=>{
-      const title = h.dataset.title || h.textContent.trim();
-      const content = h.dataset.content || '';
-      morphOpen(h, title, content);
-    });
+let hobbies = [];
+const hobbiesContainer = document.getElementById('hobbiesGrid') || document.querySelector('.hobbies-grid');
+
+function renderHobbies(list){
+  hobbiesContainer.innerHTML = '';
+  list.forEach(item=>{
+    const btn = document.createElement('button');
+    btn.className = 'card glass hobby';
+    btn.textContent = item.title || 'Hobby';
+    btn.dataset.title = item.title || '';
+    btn.dataset.content = item.content || '';
+    if(item.image) btn.dataset.image = item.image;
+    hobbiesContainer.appendChild(btn);
+  });
+  hobbies = Array.from(document.querySelectorAll('.hobby'));
+  hobbies.forEach(h => h.addEventListener('click', ()=>{
+    const title = h.dataset.title || h.textContent.trim();
+    const content = h.dataset.content || '';
+    morphOpen(h, title, content);
+  }));
+}
+
+// Prefer inline JSON (`#hobbiesData`) if present (works even with file://)
+const inlineEl = document.getElementById('hobbiesData');
+if(inlineEl){
+  try{
+    const parsed = JSON.parse(inlineEl.textContent);
+    if(Array.isArray(parsed) && parsed.length){ renderHobbies(parsed); }
+    else { renderHobbies([]); attachLocalLoader(hobbiesContainer); }
+  }catch(e){ console.warn('Failed to parse inline hobbiesData', e); renderHobbies([]); attachLocalLoader(hobbiesContainer); }
+} else {
+  // try to load JSON manifest for hobbies; fallback to built-in defaults
+  fetch(hobbiesContainer?.dataset?.source || 'assets/data/hobbies.json').then(r=> r.json()).then(list=>{
+    if(Array.isArray(list) && list.length) renderHobbies(list);
+    else {
+      // empty manifest: render nothing and offer local file loader
+      renderHobbies([]);
+      attachLocalLoader(hobbiesContainer);
+    }
+  }).catch(err=>{
+    console.warn('Failed to load hobbies.json', err);
+    // final fallback: minimal set
+    renderHobbies([
+      { title: 'PC Building', content: 'Building custom PCs, cooling, and benchmarking.', image: 'assets/hobbies/pc.jpg' },
+      { title: 'Servers & Linux', content: 'Home labs, Linux servers, networking and container setups.', image: 'assets/hobbies/servers.jpg' },
+      { title: 'Speed Cubing', content: 'Competitive cubing and algorithms practice.', image: 'assets/hobbies/cube.jpg' }
+    ]);
   });
 }
 
-// Dock-like hover magnify for hobby buttons
-const hobbiesContainer = document.querySelector('.hobbies-grid');
+// Add a small local-file loader UI so users can load `hobbies.json` from disk when fetch is blocked
+function attachLocalLoader(container){
+  if(!container) return;
+  if(container.querySelector('.local-loader')) return; // already attached
+  const wrap = document.createElement('div'); wrap.className = 'local-loader';
+  wrap.style.marginTop = '10px'; wrap.style.display = 'flex'; wrap.style.gap = '8px'; wrap.style.alignItems = 'center';
+  const info = document.createElement('div'); info.textContent = 'If hobbies are not showing, you can load a local JSON file:';
+  info.style.fontSize = '0.9rem'; info.style.opacity = '0.9';
+  const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+  input.title = 'Select hobbies.json';
+  input.addEventListener('change', (e)=>{
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const parsed = JSON.parse(reader.result);
+        if(Array.isArray(parsed) && parsed.length){ renderHobbies(parsed); }
+        else alert('JSON parsed but contains no hobby entries.');
+      }catch(err){ alert('Failed to parse JSON: '+err.message); }
+    };
+    reader.readAsText(f);
+  });
+  wrap.appendChild(info); wrap.appendChild(input);
+  container.parentNode.insertBefore(wrap, container.nextSibling);
+}
+
+// Dock-like hover magnify for hobby buttons (works after render)
 if(hobbiesContainer){
   let leaveTimer = null;
   hobbiesContainer.addEventListener('pointermove', (e)=>{
     if(reducedMotionEnabled()) return;
     if(leaveTimer){ clearTimeout(leaveTimer); leaveTimer = null; }
-    const rects = Array.from(hobbies).map(h=> h.getBoundingClientRect());
-    // horizontal dock effect: stronger near pointer
+    const rects = hobbies.map(h=> h.getBoundingClientRect());
     const sigma = Math.max(70, window.innerWidth * 0.08);
     hobbies.forEach((h, i)=>{
-      const r = rects[i];
+      const r = rects[i]; if(!r) return;
       const cx = r.left + r.width/2;
       const dx = e.clientX - cx;
       const d = Math.abs(dx);
       const influence = Math.exp(-(d*d)/(2*sigma*sigma));
-      const scale = 1 + Math.min(1.1, influence * 1.2); // up to ~2.1 but clamped
+      const scale = 1 + Math.min(1.1, influence * 1.2);
       h.style.setProperty('--s', scale.toFixed(3));
     });
   }, { passive: true });
 
   hobbiesContainer.addEventListener('pointerleave', ()=>{
-    // gently reset scales
     hobbies.forEach(h=> h.style.setProperty('--s','1'));
     if(leaveTimer) clearTimeout(leaveTimer);
     leaveTimer = setTimeout(()=>{ hobbies.forEach(h=> h.style.setProperty('--s','1')); }, 120);
@@ -360,6 +422,89 @@ document.addEventListener('click', (e)=>{
 });
 
 // Morphing open/close implementation for hobby buttons
+
+/* Media carousel for showcase - loads assets/portfolio/manifest.json */
+(() => {
+  const slidesEl = document.getElementById('mediaSlides');
+  const dotsEl = document.getElementById('mediaDots');
+  const prevBtn = document.querySelector('.media-arrow.prev');
+  const nextBtn = document.querySelector('.media-arrow.next');
+  if(!slidesEl) return;
+
+  let items = [];
+  let index = 0;
+  let autoplay = true;
+  let interval = 3500;
+  let timer = null;
+
+  function render(){
+    slidesEl.innerHTML = '';
+    dotsEl && (dotsEl.innerHTML = '');
+    items.forEach((it,i)=>{
+      const slide = document.createElement('div'); slide.className = 'media-slide';
+      slide.dataset.index = i;
+      if(it.type === 'video'){
+        const v = document.createElement('video'); v.src = encodeURI(it.src); v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = (i===index); v.controls = false;
+        slide.appendChild(v);
+      } else {
+        const img = document.createElement('img'); img.src = encodeURI(it.src); img.alt = it.name || ('media-'+i);
+        slide.appendChild(img);
+      }
+      slide.style.opacity = i===index? '1':'0';
+      slide.style.transition = 'opacity 420ms ease';
+      slidesEl.appendChild(slide);
+
+      if(dotsEl){
+        const d = document.createElement('button'); d.className = 'media-dot'+(i===index? ' active':''); d.dataset.index = i; d.addEventListener('click', ()=>{ goTo(i); });
+        dotsEl.appendChild(d);
+      }
+    });
+  }
+
+  function goTo(i){
+    if(i<0) i = items.length-1; if(i>=items.length) i = 0;
+    const prev = index; index = i;
+    const slides = slidesEl.querySelectorAll('.media-slide');
+    slides.forEach(s=> s.style.opacity = s.dataset.index==index? '1':'0');
+    if(dotsEl){ Array.from(dotsEl.children).forEach((d,idx)=> d.classList.toggle('active', idx===index)); }
+    // start video if applicable
+    slides.forEach(s=>{ const v = s.querySelector('video'); if(v){ if(parseInt(s.dataset.index,10)===index){ try{ v.play(); }catch(e){} } else { try{ v.pause(); v.currentTime = 0; }catch(e){} } }});
+  }
+
+  function next(){ goTo(index+1); }
+  function prev(){ goTo(index-1); }
+
+  function startTimer(){ if(timer) clearInterval(timer); if(autoplay) timer = setInterval(next, interval); }
+  function stopTimer(){ if(timer) clearInterval(timer); timer = null; }
+
+  // controls
+  if(prevBtn) prevBtn.addEventListener('click', ()=>{ prev(); startTimer(); });
+  if(nextBtn) nextBtn.addEventListener('click', ()=>{ next(); startTimer(); });
+
+  slidesEl.addEventListener('mouseenter', ()=>{ autoplay = false; stopTimer(); });
+  slidesEl.addEventListener('mouseleave', ()=>{ autoplay = true; startTimer(); });
+
+  // keyboard navigation
+  slidesEl.addEventListener('keydown', (e)=>{ if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); });
+
+  // load manifest
+  fetch('assets/portfolio/manifest.json').then(r=> r.json()).then(list=>{
+    if(Array.isArray(list) && list.length){
+      items = list.map(p=>{
+        const lower = p.toLowerCase();
+        return { src: p, type: (lower.endsWith('.mp4')||lower.endsWith('.webm')||lower.endsWith('.ogg'))? 'video':'image', name: p };
+      });
+    }
+    // fallback sample if none
+    if(!items.length){ items = [ { src: 'assets/sample1.jpg', type:'image' }, { src: 'assets/sample2.jpg', type:'image' } ]; }
+    render(); startTimer();
+  }).catch(err=>{
+    console.warn('Failed to load portfolio manifest', err);
+    // Fallback: show a single sample slide; don't display an on-page notice
+    items = [ { src: 'assets/sample1.jpg', type:'image' } ]; render(); startTimer();
+  });
+
+})();
 function morphOpen(button, title, content){
   // compute start rect
   const rect = button.getBoundingClientRect();
@@ -389,13 +534,28 @@ function morphOpen(button, title, content){
   el.style.borderRadius = getComputedStyle(button).borderRadius || '12px';
 
   const inner = document.createElement('div'); inner.className = 'morph-inner';
+
+  // Left media panel (only shown when data-image present)
+  const mediaPanel = document.createElement('div'); mediaPanel.className = 'morph-media';
+  const imgSrc = button.dataset.image || button.getAttribute('data-image') || '';
+  if(imgSrc){
+    const mi = document.createElement('img'); mi.src = encodeURI(imgSrc); mi.alt = title + ' image'; mediaPanel.appendChild(mi);
+  } else {
+    // placeholder graphic
+    const ph = document.createElement('div'); ph.style.padding = '20px'; ph.style.opacity = '0.6'; ph.textContent = ''; mediaPanel.appendChild(ph);
+  }
+
+  const body = document.createElement('div'); body.className = 'morph-body';
   const h = document.createElement('div'); h.className = 'morph-title'; h.textContent = title;
   const closeBtn = document.createElement('button'); closeBtn.className = 'morph-close'; closeBtn.textContent = '✕';
-  const contentDiv = document.createElement('div'); contentDiv.className = 'morph-content'; contentDiv.textContent = content + '\n\nLorem ipsum dolor sit amet, consectetur.';
+  const contentDiv = document.createElement('div'); contentDiv.className = 'morph-content'; contentDiv.textContent = content || '';
 
-  inner.appendChild(h);
-  inner.appendChild(closeBtn);
-  inner.appendChild(contentDiv);
+  body.appendChild(h);
+  body.appendChild(closeBtn);
+  body.appendChild(contentDiv);
+
+  inner.appendChild(mediaPanel);
+  inner.appendChild(body);
   el.appendChild(inner);
   document.body.appendChild(el);
 

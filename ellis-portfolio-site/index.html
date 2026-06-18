@@ -29,7 +29,6 @@
     </nav>
 
     <button id="settingsToggle" class="settings-toggle" aria-label="Open settings">
-      <!-- simpler stable gear icon -->
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.936a7.994 7.994 0 000-1.872l2.03-1.578a.5.5 0 00.12-.641l-1.922-3.327a.5.5 0 00-.607-.22l-2.39.96a7.03 7.03 0 00-1.62-.936l-.36-2.54A.5.5 0 0012.99 2h-1.98a.5.5 0 00-.495.424l-.36 2.54a7.03 7.03 0 00-1.62.936l-2.39-.96a.5.5 0 00-.607.22L2.69 7.486a.5.5 0 00.12.641l2.03 1.578a7.994 7.994 0 000 1.872L2.81 14.71a.5.5 0 00-.12.641l1.922 3.327a.5.5 0 00.607.22l2.39-.96c.522.408 1.05.711 1.62.936l.36 2.54a.5.5 0 00.495.424h1.98a.5.5 0 00.495-.424l.36-2.54c.57-.225 1.098-.528 1.62-.936l2.39.96a.5.5 0 00.607-.22l1.922-3.327a.5.5 0 00-.12-.641l-2.03-1.578zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
     </button>
     <button class="nav-toggle" aria-label="Open menu">☰</button>
@@ -63,12 +62,14 @@
 
     <div class="profile-card glass">
       <div class="avatar-wrap">
-        <img src="assets/profile.jpg" alt="Ellis" class="avatar" onerror="this.style.display='none'">
+        <img src="assets/profile.jpg" alt="picture of Ellis Harris-Brocklesby" class="avatar" onerror="this.style.display='none'">
         <div class="avatar-fallback">E</div>
       </div>
       <div class="profile-info">
-        <strong>Ellis</strong>
-        <p class="lorem">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Student & VFX artist focused on 3D, CAD, and experimental systems.</p>
+        <strong>Ellis Harris-Brocklesby</strong>
+        <p class="lorem">
+          I focus on 3D, VFX, and CAD, working with Blender, simulations, and modelling, aiming for a career in CGI and visual effects.
+        </p>
         <div class="hero-buttons">
           <button onclick="scrollToSection('work')">View Work</button>
           <button onclick="scrollToSection('contact')">Contact</button>
@@ -85,8 +86,7 @@
 <section id="about" class="section glass">
   <h2>About</h2>
   <p class="lorem">
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.
-    Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris.
+    I am a student focused on developing skills in CGI, VFX, CAD, and technical design. My work combines creative thinking with problem solving, especially in areas like simulation, modelling, and animation. I enjoy learning how real systems work and recreating them digitally in Blender and other tools.
   </p>
 </section>
 
@@ -95,13 +95,27 @@
   <h2>Showcase — CGI / VFX / CAD</h2>
 
   <div class="showcase glass">
-    <div class="showcase-main placeholder">
-      <div style="padding:16px" class="lorem">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus fermentum in, dolor. Pellentesque facilisis. Nulla imperdiet sit amet magna.</div>
+    <div class="showcase-main media-viewer" aria-roledescription="portfolio media viewer">
+      <div class="media-stage">
+        <button class="media-arrow prev" aria-label="Previous">◀</button>
+        <div class="media-slides" id="mediaSlides" tabindex="0"></div>
+        <button class="media-arrow next" aria-label="Next">▶</button>
+      </div>
+      <div class="media-controls">
+        <div class="media-dots" id="mediaDots"></div>
+      </div>
     </div>
+
     <div class="showcase-side">
-      <div class="thumb placeholder"></div>
-      <div class="thumb placeholder"></div>
-      <div class="thumb placeholder"></div>
+      <div style="padding:16px">
+        <h3>Showcase</h3>
+        <p class="lorem">
+          This section represents my experimental work in CGI, animation, and CAD modelling. Projects often include simulations, environment builds, and mechanical designs where I focus on both visual quality and technical accuracy.
+        </p>
+        <p class="lorem">
+          I usually develop projects by testing ideas in small stages, refining materials, lighting, and motion until the final result feels realistic and intentional.
+        </p>
+      </div>
     </div>
   </div>
 </section>
@@ -122,13 +136,13 @@
   <h2>Hobbies</h2>
 
   <div class="grid hobbies-grid">
-
-    <button class="card glass hobby" data-title="PC Building" data-content="Building custom PCs, cooling, and benchmarking.">PC Building</button>
-    <button class="card glass hobby" data-title="Servers & Linux" data-content="Home labs, Linux servers, networking and container setups.">Servers & Linux</button>
-    <button class="card glass hobby" data-title="Speed Cubing" data-content="Competitive cubing and algorithms practice.">Speed Cubing</button>
-    <button class="card glass hobby" data-title="3D Printing" data-content="Designing and printing functional parts and prototypes.">3D Printing</button>
-    <button class="card glass hobby" data-title="Karate" data-content="Training and discipline in martial arts.">Karate</button>
-
+    <button class="card glass hobby" data-title="PC Building" data-content="Building custom PCs focused on performance, airflow, and reliability. I enjoy selecting parts, optimizing cooling setups, cable management, and benchmarking systems to test real-world performance. I also experiment with upgrades, overclocking, and troubleshooting hardware issues to get the most out of each build.">PC Building</button>
+    <button class="card glass hobby" data-title="Servers & Linux" data-content="Running home servers and experimenting with Linux systems. This includes setting up self-hosted services, managing containers, learning networking fundamentals, and automating tasks. I also explore different distros and enjoy understanding how systems run at a deeper level beyond standard user interfaces.">Servers & Linux</button>
+    <button class="card glass hobby" data-title="Speed Cubing" data-content="Practicing speed cubing with a focus on improving algorithms, recognition, and finger tricks. I work on reducing solve times through repetition, learning efficient methods, and tracking averages. It’s a mix of pattern recognition, memory, and fast execution under pressure.">Speed Cubing</button>
+    <button class="card glass hobby" data-title="3D Printing" data-content="Designing and printing functional parts, prototypes, and custom creations. I use 3D printing for practical engineering ideas as well as creative projects, focusing on design optimization, tolerances, and material behavior. It often connects with CAD work and real-world problem solving." data-image="assets/hobbies/3dprint.jpg">3D Printing</button>
+    <button class="card glass hobby" data-title="Karate" data-content="Training in karate with a focus on discipline, technique, and physical conditioning. I practice forms, sparring, and controlled movement while building consistency, reflexes, and mental focus. It also helps with overall fitness and mindset development.">Karate</button>
+    <button class="card glass hobby" data-title="FPV / Drones" data-content="Flying and building FPV drones, including tuning flight controllers, improving stability, and testing different frame and motor setups. I enjoy both the technical side of building and the creative side of flying cinematic or freestyle lines through environments." data-image="assets/hobbies/fpv.jpg">FPV / Drones</button>
+    <button class="card glass hobby" data-title="Mechatronics / Engineering" data-content="Exploring embedded systems, sensors, electronics, and mechanical design. I work on small prototypes that combine software and hardware, learning how systems interact in real-world applications. This includes CAD modelling, circuit basics, and automation concepts." data-image="assets/hobbies/mechatronics.jpg">Mechatronics / Engineering</button>
   </div>
 </section>
 
@@ -159,24 +173,20 @@
         <button type="submit" class="btn-primary">Send via email</button>
       </div>
 
-      <p class="note">Note: clicking "Send via email" will open your mail app to send to <strong>contact@ellisbrocklesby.com</strong>.</p>
     </form>
 
     <aside class="contact-aside">
       <h3>Social</h3>
       <div class="social-links">
         <a class="social" href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-          <!-- Instagram SVG -->
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2"/><circle cx="17.5" cy="6.5" r="0.7" fill="currentColor"/></svg>
           <span>Instagram</span>
         </a>
         <a class="social" href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-          <!-- Facebook SVG -->
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 8h2V5h-2c-1.1 0-2 .9-2 2v1H11v3h2v6h3v-6h2l1-3h-3V7c0-.55.45-1 1-1z" fill="currentColor"/></svg>
           <span>Facebook</span>
         </a>
         <a class="social" href="#" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
-          <!-- YouTube SVG -->
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 15l5.2-3L10 9v6z" fill="currentColor"/><rect x="3" y="6" width="18" height="12" rx="3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
           <span>YouTube</span>
         </a>
