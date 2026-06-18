@@ -231,6 +231,9 @@ function renderHobbies(list){
     btn.dataset.title = item.title || '';
     btn.dataset.content = item.content || '';
     if(item.image) btn.dataset.image = item.image;
+    if(item.specs) btn.dataset.specs = JSON.stringify(item.specs);
+    if(item.instagram) btn.dataset.instagram = item.instagram;
+    if(item.youtube) btn.dataset.youtube = item.youtube;
     hobbiesContainer.appendChild(btn);
   });
   hobbies = Array.from(document.querySelectorAll('.hobby'));
@@ -526,10 +529,13 @@ function morphOpen(button, title, content){
   const hadWobble = button.classList.contains('wobble');
   const origTransition = button.style.transition || '';
   const origTransform = button.style.transform || '';
+  const origPointer = button.style.pointerEvents || '';
   if(hadWobble) { button.classList.remove('wobble'); button.dataset.hadWobble = '1'; }
   // lock current computed transform and disable transitions temporarily
   button.style.transform = getComputedStyle(button).transform;
   button.style.transition = 'none';
+  // prevent the source button from capturing taps while morph is open (mobile issue)
+  button.style.pointerEvents = 'none';
 
   const el = document.createElement('div');
   el.className = 'morph-card glass';
@@ -556,31 +562,65 @@ function morphOpen(button, title, content){
   const closeBtn = document.createElement('button'); closeBtn.className = 'morph-close'; closeBtn.textContent = '✕';
   const contentDiv = document.createElement('div'); contentDiv.className = 'morph-content';
 
-  // If the hobby has an associated external link (e.g., Speed Cubing WCA profile), embed it if possible and provide an Open button
+  // collect potential social links (WCA/profile, Instagram, YouTube)
   const link = button.dataset.link || button.getAttribute('data-link') || (title && title.toLowerCase().includes('speed cubing') ? 'https://www.worldcubeassociation.org/persons/2022HARR08' : '');
-  if(link){
-    // show iframe preview (may be blocked by X-Frame-Options); always show an external button
-    const frameWrap = document.createElement('div'); frameWrap.style.width = '100%'; frameWrap.style.height = '280px'; frameWrap.style.background = '#061018'; frameWrap.style.overflow = 'hidden';
-    const iframe = document.createElement('iframe'); iframe.src = link; iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = '0'; iframe.setAttribute('loading','lazy');
-    frameWrap.appendChild(iframe);
-    contentDiv.appendChild(frameWrap);
+  const igUrl = button.dataset.instagram || button.getAttribute('data-instagram') || button.dataset.ig || button.getAttribute('data-ig') || '';
+  const ytUrl = button.dataset.youtube || button.getAttribute('data-youtube') || button.dataset.yt || button.getAttribute('data-yt') || '';
+
+  if(link || igUrl || ytUrl){
+    // if there's a primary link, try to show an iframe preview; otherwise only show buttons
+    if(link){
+      const frameWrap = document.createElement('div'); frameWrap.style.width = '100%'; frameWrap.style.height = '280px'; frameWrap.style.background = '#061018'; frameWrap.style.overflow = 'hidden';
+      const iframe = document.createElement('iframe'); iframe.src = link; iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = '0'; iframe.setAttribute('loading','lazy');
+      frameWrap.appendChild(iframe);
+      contentDiv.appendChild(frameWrap);
+    }
+
     const linkRow = document.createElement('div'); linkRow.style.display = 'flex'; linkRow.style.gap = '8px'; linkRow.style.marginTop = '8px';
-    const openBtn = document.createElement('a'); openBtn.className = 'btn-ghost'; openBtn.textContent = 'Open on WCA'; openBtn.href = link; openBtn.target = '_blank'; openBtn.rel = 'noopener noreferrer';
-    linkRow.appendChild(openBtn);
-    // Instagram & YouTube buttons (use data attributes if provided on the hobby entry)
-    const igUrl = button.dataset.instagram || button.getAttribute('data-instagram') || button.dataset.ig || button.getAttribute('data-ig') || '';
-    const ytUrl = button.dataset.youtube || button.getAttribute('data-youtube') || button.dataset.yt || button.getAttribute('data-yt') || '';
-    const igBtn = document.createElement('a'); igBtn.className = 'btn-ghost social-ig'; igBtn.textContent = 'Instagram'; igBtn.href = igUrl || '#'; igBtn.target = '_blank'; igBtn.rel = 'noopener noreferrer';
-    if(!igUrl) igBtn.title = 'Instagram link not configured';
-    linkRow.appendChild(igBtn);
-    const ytBtn = document.createElement('a'); ytBtn.className = 'btn-ghost social-yt'; ytBtn.textContent = 'YouTube'; ytBtn.href = ytUrl || '#'; ytBtn.target = '_blank'; ytBtn.rel = 'noopener noreferrer';
-    if(!ytUrl) ytBtn.title = 'YouTube link not configured';
-    linkRow.appendChild(ytBtn);
+    if(link){
+      const openBtn = document.createElement('a'); openBtn.className = 'btn-ghost'; openBtn.textContent = 'Open on WCA'; openBtn.href = link; openBtn.target = '_blank'; openBtn.rel = 'noopener noreferrer';
+      linkRow.appendChild(openBtn);
+    }
+
+    if(igUrl){
+      const igBtn = document.createElement('a'); igBtn.className = 'btn-ghost social-ig'; igBtn.href = igUrl; igBtn.target = '_blank'; igBtn.rel = 'noopener noreferrer';
+      igBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2"/><circle cx="17.5" cy="6.5" r="0.7" fill="currentColor"/></svg><span>Instagram</span>';
+      linkRow.appendChild(igBtn);
+    }
+
+    if(ytUrl){
+      const ytBtn = document.createElement('a'); ytBtn.className = 'btn-ghost social-yt'; ytBtn.href = ytUrl; ytBtn.target = '_blank'; ytBtn.rel = 'noopener noreferrer';
+      ytBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 15l5.2-3L10 9v6z" fill="currentColor"/><rect x="3" y="6" width="18" height="12" rx="3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg><span>YouTube</span>';
+      linkRow.appendChild(ytBtn);
+    }
+
     contentDiv.appendChild(linkRow);
+    // render specs list if present
+    try{
+      if(button.dataset.specs){
+        const specs = JSON.parse(button.dataset.specs);
+        if(Array.isArray(specs) && specs.length){
+          const ul = document.createElement('ul'); ul.style.marginTop = '10px'; ul.style.paddingLeft = '18px';
+          specs.forEach(s=>{ const li = document.createElement('li'); li.textContent = s; ul.appendChild(li); });
+          contentDiv.appendChild(ul);
+        }
+      }
+    }catch(e){ console.warn('Failed to parse specs for hobby', e); }
     // also append the textual content below if provided
     if(content){ const p = document.createElement('div'); p.style.marginTop = '8px'; p.textContent = content; contentDiv.appendChild(p); }
   } else {
-    contentDiv.textContent = content || '';
+    // no links/buttons; render specs (if any) then content
+    try{
+      if(button.dataset.specs){
+        const specs = JSON.parse(button.dataset.specs);
+        if(Array.isArray(specs) && specs.length){
+          const ul = document.createElement('ul'); ul.style.marginTop = '10px'; ul.style.paddingLeft = '18px';
+          specs.forEach(s=>{ const li = document.createElement('li'); li.textContent = s; ul.appendChild(li); });
+          contentDiv.appendChild(ul);
+        }
+      }
+    }catch(e){ console.warn('Failed to parse specs for hobby', e); }
+    if(content) contentDiv.appendChild(document.createTextNode(content || ''));
   }
 
   body.appendChild(h);
@@ -632,6 +672,7 @@ function morphOpen(button, title, content){
     if(window.reducedMotionEnabled && window.reducedMotionEnabled()){
       // restore source button state
       try { if(button){ if(button.dataset.hadWobble){ button.classList.add('wobble'); delete button.dataset.hadWobble; } button.style.transition = origTransition; button.style.transform = origTransform; } } catch(e){}
+      try { if(button){ button.style.pointerEvents = origPointer; } } catch(e){}
       if(el && el.parentNode) el.parentNode.removeChild(el);
       overlay.classList.remove('open');
       overlay.hidden = true;
@@ -647,6 +688,7 @@ function morphOpen(button, title, content){
     el.addEventListener('transitionend', ()=>{
       // restore source button state
       try { if(button){ if(button.dataset.hadWobble){ button.classList.add('wobble'); delete button.dataset.hadWobble; } button.style.transition = origTransition; button.style.transform = origTransform; } } catch(e){}
+      try { if(button){ button.style.pointerEvents = origPointer; } } catch(e){}
       if(el && el.parentNode) el.parentNode.removeChild(el);
       overlay.hidden = true;
       document.body.style.overflow = '';

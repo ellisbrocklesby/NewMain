@@ -516,7 +516,8 @@ footer {
 .morph-media img{width:100%; height:100%; object-fit:cover}
 .morph-body{flex:1; padding:18px; display:flex; flex-direction:column; gap:12px}
 .morph-title{ font-size:1.05rem; font-weight:700; transform-origin:left top; transition: transform 320ms cubic-bezier(.2,.9,.3,1); }
-.morph-content{ opacity:0; transform: translateY:8px; transition: opacity 240ms ease, transform 240ms ease; color: rgba(255,255,255,0.9); max-height:56vh; overflow:auto }
+.morph-content{ opacity:0; transform: translateY(8px); transition: opacity 240ms ease, transform 240ms ease; color: rgba(255,255,255,0.9); max-height:56vh; overflow:auto }
+.morph-content a{ color: inherit; text-decoration: underline; pointer-events: auto }
 .morph-content.show{ opacity:1; transform:none }
 .morph-close{ position:absolute; right:12px; top:12px; background:transparent; border:none; color:#fff; font-size:18px; cursor:pointer }
 
@@ -590,6 +591,11 @@ html{ -webkit-text-size-adjust:100%; }
 .contact-actions{ display:flex; gap:8px; align-items:center }
 .btn-primary{ background: linear-gradient(90deg,#6ee7b7,#60a5fa); color:#052026; border:none; padding:10px 14px; border-radius:10px; cursor:pointer }
 .btn-ghost{ background:transparent; border:1px solid rgba(255,255,255,0.06); color:inherit; padding:8px 12px; border-radius:10px; cursor:pointer }
+/* Icon styling inside ghost buttons */
+.btn-ghost svg{ width:16px; height:16px; margin-right:8px; vertical-align:middle; display:inline-block }
+.btn-ghost span{ vertical-align:middle }
+.social-yt svg{ color: #ff0000 }
+.social-ig svg{ color: #E1306C }
 .note{ font-size:0.86rem; opacity:0.9 }
 
 .contact-aside{ width:260px; flex:0 0 260px }
