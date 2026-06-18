@@ -132,6 +132,32 @@ html.no-animations *, html.no-animations *::before, html.no-animations *::after{
 /* Subtle glow */
 .hero-glow{position:absolute;left:50%;top:40%;width:800px;height:800px;border-radius:50%;transform:translateX(-50%);filter:blur(120px);background:radial-gradient(circle,#6ee7b7,transparent 30%);opacity:.08;pointer-events:none}
 
+/* Page load reveal animation */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Ensure cards/sections start hidden (unless reduced motion or explicitly revealed) */
+.card, .section { opacity: 0; transform: translateY(30px); }
+
+/* When body has .loaded run a staggered fadeUp on tiles */
+body.loaded .card:not(.revealed), body.loaded .section:not(.revealed) {
+  animation-name: fadeUp;
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(.2,.9,.3,1);
+  animation-fill-mode: both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+  animation-iteration-count: 1;
+}
+
+/* once revealed, ensure the element doesn't re-run the animation */
+.revealed { animation: none !important; opacity: 1 !important; transform: none !important }
+
+@media (prefers-reduced-motion: reduce) {
+  body.loaded .card, body.loaded .section { animation: none; opacity:1; transform:none }
+}
+
 footer{padding:40px 24px;text-align:center;color:rgba(230,238,246,0.6)}
 
 /* Utility for depth weighting */
@@ -416,7 +442,7 @@ footer {
 }
 
 /* Wobble tiles: subtle continuous motion + pointer-driven momentum */
-.card{ --tx:0; --ty:0; --r:0; transform: translate3d(var(--tx), var(--ty), 0) rotate(var(--r)); transition: transform 350ms cubic-bezier(.2,.9,.3,1) }
+.card{ --tx:0; --ty:0; --r:0; --s:1; transform: translate3d(var(--tx), var(--ty), 0) rotate(var(--r)) scale(var(--s)); transition: transform 220ms cubic-bezier(.2,.9,.3,1) }
 .card.wobble { animation: slowWobble 6s ease-in-out infinite }
 
 @keyframes slowWobble{
@@ -468,6 +494,12 @@ footer {
 .morph-content{ opacity:0; transform: translateY(8px); transition: opacity 240ms ease, transform 240ms ease; color: rgba(255,255,255,0.9) }
 .morph-content.show{ opacity:1; transform:none }
 .morph-close{ margin-left:auto;background:transparent;border:none;color:#fff;font-size:18px }
+
+/* Hobbies: ensure text reads white on tiles */
+.hobbies-grid .card { color: #ffffff; }
+
+/* Dock-like scale origin for hobby buttons */
+.hobbies-grid .card { transform-origin: 50% 90%; }
 
 /* ================= MOBILE TUNING ================= */
 html{ -webkit-text-size-adjust:100%; }

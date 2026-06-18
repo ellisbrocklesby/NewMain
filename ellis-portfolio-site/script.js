@@ -124,11 +124,28 @@
           localStorage.removeItem('disableAnimations');
         }
       });
+
+      // page-load reveal: stagger cards/sections unless animations are disabled
+      const revealEls = document.querySelectorAll('.card, .section');
+      revealEls.forEach((el, i)=> el.style.setProperty('--i', i));
+      if(reducedMotionEnabled()){
+        revealEls.forEach(el=>{ el.style.opacity = 1; el.style.transform = 'none'; el.classList.add('revealed'); });
+      } else {
+        // small delay so styles/layout settle, then add loaded which triggers stagger
+        setTimeout(()=>{
+          document.body.classList.add('loaded');
+          // after animation end, mark elements revealed so they won't re-run
+          revealEls.forEach(el=>{
+            const onAnimEnd = (ev)=>{ el.classList.add('revealed'); el.removeEventListener('animationend', onAnimEnd); };
+            el.addEventListener('animationend', onAnimEnd, { once: true });
+          });
+        }, 80);
+      }
   });
 
 })();
 
-/* scroll reveal animation */
+/* scroll reveal animation (intersection reveals when scrolled into view) */
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if(entry.isIntersecting){
@@ -138,10 +155,9 @@ const observer = new IntersectionObserver(entries => {
   });
 });
 
-document.querySelectorAll(".card, .section").forEach(el => {
-  el.style.opacity = 0;
-  el.style.transform = "translateY(30px)";
-  el.style.transition = "all 0.6s ease";
+// Stagger indices will be assigned on load; observe all revealable elements now
+document.querySelectorAll('.card, .section').forEach((el, i) => {
+  el.style.setProperty('--i', i);
   observer.observe(el);
 });
 
@@ -207,6 +223,35 @@ if(hobbies.length){
       const content = h.dataset.content || '';
       morphOpen(h, title, content);
     });
+  });
+}
+
+// Dock-like hover magnify for hobby buttons
+const hobbiesContainer = document.querySelector('.hobbies-grid');
+if(hobbiesContainer){
+  let leaveTimer = null;
+  hobbiesContainer.addEventListener('pointermove', (e)=>{
+    if(reducedMotionEnabled()) return;
+    if(leaveTimer){ clearTimeout(leaveTimer); leaveTimer = null; }
+    const rects = Array.from(hobbies).map(h=> h.getBoundingClientRect());
+    // horizontal dock effect: stronger near pointer
+    const sigma = Math.max(70, window.innerWidth * 0.08);
+    hobbies.forEach((h, i)=>{
+      const r = rects[i];
+      const cx = r.left + r.width/2;
+      const dx = e.clientX - cx;
+      const d = Math.abs(dx);
+      const influence = Math.exp(-(d*d)/(2*sigma*sigma));
+      const scale = 1 + Math.min(1.1, influence * 1.2); // up to ~2.1 but clamped
+      h.style.setProperty('--s', scale.toFixed(3));
+    });
+  }, { passive: true });
+
+  hobbiesContainer.addEventListener('pointerleave', ()=>{
+    // gently reset scales
+    hobbies.forEach(h=> h.style.setProperty('--s','1'));
+    if(leaveTimer) clearTimeout(leaveTimer);
+    leaveTimer = setTimeout(()=>{ hobbies.forEach(h=> h.style.setProperty('--s','1')); }, 120);
   });
 }
 
@@ -302,6 +347,15 @@ function morphOpen(button, title, content){
   const targetTop = Math.max(18, (window.innerHeight - targetH)/6);
 
   // create morph element
+  // freeze source button to avoid wobble/looping while morph animates
+  const hadWobble = button.classList.contains('wobble');
+  const origTransition = button.style.transition || '';
+  const origTransform = button.style.transform || '';
+  if(hadWobble) { button.classList.remove('wobble'); button.dataset.hadWobble = '1'; }
+  // lock current computed transform and disable transitions temporarily
+  button.style.transform = getComputedStyle(button).transform;
+  button.style.transition = 'none';
+
   const el = document.createElement('div');
   el.className = 'morph-card glass';
   el.style.left = start.left + 'px';
@@ -359,6 +413,8 @@ function morphOpen(button, title, content){
     contentDiv.classList.remove('show');
     // animate back (or remove immediately if animations disabled)
     if(window.reducedMotionEnabled && window.reducedMotionEnabled()){
+      // restore source button state
+      try { if(button){ if(button.dataset.hadWobble){ button.classList.add('wobble'); delete button.dataset.hadWobble; } button.style.transition = origTransition; button.style.transform = origTransform; } } catch(e){}
       if(el && el.parentNode) el.parentNode.removeChild(el);
       overlay.classList.remove('open');
       overlay.hidden = true;
@@ -372,6 +428,8 @@ function morphOpen(button, title, content){
     overlay.classList.remove('open');
     // after return animation remove
     el.addEventListener('transitionend', ()=>{
+      // restore source button state
+      try { if(button){ if(button.dataset.hadWobble){ button.classList.add('wobble'); delete button.dataset.hadWobble; } button.style.transition = origTransition; button.style.transform = origTransform; } } catch(e){}
       if(el && el.parentNode) el.parentNode.removeChild(el);
       overlay.hidden = true;
       document.body.style.overflow = '';
