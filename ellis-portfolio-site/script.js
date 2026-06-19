@@ -749,3 +749,11 @@ const sectionObserver = new IntersectionObserver(entries=>{
 },{ threshold: 0.56 });
 
 document.querySelectorAll('section[id]').forEach(s=> sectionObserver.observe(s));
+
+// Set footer year automatically
+(function(){
+  try{
+    const el = document.getElementById('year');
+    if(el) el.textContent = new Date().getFullYear();
+  }catch(e){ /* no-op */ }
+})();
