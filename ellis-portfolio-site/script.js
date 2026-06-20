@@ -453,7 +453,7 @@ document.addEventListener('click', (e)=>{
       const slide = document.createElement('div'); slide.className = 'media-slide';
       slide.dataset.index = i;
       if(it.type === 'video'){
-        const v = document.createElement('video'); v.src = encodeURI(it.src); v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = (i===index); v.controls = false;
+        const v = document.createElement('video'); v.src = encodeURI(it.src); v.muted = true; v.loop = false; v.playsInline = true; v.preload = 'metadata'; v.controls = false;
         slide.appendChild(v);
       } else {
         const img = document.createElement('img'); img.src = encodeURI(it.src); img.alt = it.name || ('media-'+i);
@@ -476,15 +476,47 @@ document.addEventListener('click', (e)=>{
     const slides = slidesEl.querySelectorAll('.media-slide');
     slides.forEach(s=> s.style.opacity = s.dataset.index==index? '1':'0');
     if(dotsEl){ Array.from(dotsEl.children).forEach((d,idx)=> d.classList.toggle('active', idx===index)); }
-    // start video if applicable
-    slides.forEach(s=>{ const v = s.querySelector('video'); if(v){ if(parseInt(s.dataset.index,10)===index){ try{ v.play(); }catch(e){} } else { try{ v.pause(); v.currentTime = 0; }catch(e){} } }});
+    // start video if applicable; pause others and reset
+    slides.forEach(s=>{
+      const v = s.querySelector('video');
+      if(v){
+        if(parseInt(s.dataset.index,10)===index){ try{ v.currentTime = 0; v.play().catch(()=>{}); }catch(e){} }
+        else { try{ v.pause(); v.currentTime = 0; }catch(e){} }
+      }
+    });
+    // schedule next slide according to media type (video finishes or image shows for 3s)
+    scheduleNext();
   }
 
   function next(){ goTo(index+1); }
   function prev(){ goTo(index-1); }
 
-  function startTimer(){ if(timer) clearInterval(timer); if(autoplay) timer = setInterval(next, interval); }
-  function stopTimer(){ if(timer) clearInterval(timer); timer = null; }
+  function startTimer(){
+    // legacy compatibility: schedule next for current slide
+    if(timer) clearTimeout(timer);
+    if(!autoplay) return;
+    scheduleNext();
+  }
+  function stopTimer(){ if(timer) clearTimeout(timer); timer = null; }
+
+  function scheduleNext(){
+    // clear any pending
+    if(timer) clearTimeout(timer);
+    const slides = slidesEl.querySelectorAll('.media-slide');
+    const current = slidesEl.querySelector('.media-slide[style*="opacity: 1"]') || slides[index];
+    if(!current) return;
+    const v = current.querySelector('video');
+    if(v){
+      // wait for video to end then advance
+      const onEnd = ()=>{ v.removeEventListener('ended', onEnd); if(autoplay) next(); };
+      v.addEventListener('ended', onEnd, { once: true });
+      // as fallback, if video already ended or can't play, set safety timeout (e.g., 10s)
+      timer = setTimeout(()=>{ try{ v.removeEventListener('ended', onEnd); if(autoplay) next(); }catch(e){} }, Math.max(10000, v.duration? (v.duration*1000 + 200):10000));
+    } else {
+      // image: show for 3 seconds
+      timer = setTimeout(()=>{ if(autoplay) next(); }, 3000);
+    }
+  }
 
   // controls
   if(prevBtn) prevBtn.addEventListener('click', ()=>{ prev(); startTimer(); });
@@ -496,22 +528,46 @@ document.addEventListener('click', (e)=>{
   // keyboard navigation
   slidesEl.addEventListener('keydown', (e)=>{ if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); });
 
-  // load manifest
-  fetch('assets/portfolio/manifest.json').then(r=> r.json()).then(list=>{
-    if(Array.isArray(list) && list.length){
-      items = list.map(p=>{
-        const lower = p.toLowerCase();
-        return { src: p, type: (lower.endsWith('.mp4')||lower.endsWith('.webm')||lower.endsWith('.ogg'))? 'video':'image', name: p };
-      });
-    }
-    // fallback sample if none
-    if(!items.length){ items = [ { src: 'assets/sample1.jpg', type:'image' }, { src: 'assets/sample2.jpg', type:'image' } ]; }
-    render(); startTimer();
-  }).catch(err=>{
-    console.warn('Failed to load portfolio manifest', err);
-    // Fallback: show a single sample slide; don't display an on-page notice
-    items = [ { src: 'assets/sample1.jpg', type:'image' } ]; render(); startTimer();
-  });
+  // Use a direct list of files from the `assets/portfolio` folder so the carousel
+  // does not rely on a separate manifest file. Update this array if you add/remove files.
+  items = [
+    { src: 'assets/portfolio/best eye.png', type: 'image', name: 'best eye.png' },
+    { src: 'assets/portfolio/Screenshot 2026-06-20 151058.png', type: 'image', name: 'screenshot' },
+    { src: 'assets/portfolio/Star wars.mp4', type: 'video', name: 'star wars' },
+    { src: 'assets/portfolio/bed.mp4', type: 'video', name: 'bed' }
+  ];
+  render(); goTo(index);
+
+  // Ensure videos can start by using a user gesture unlock (some browsers block autoplay).
+  let mediaUnlocked = false;
+  function unlockMedia(){
+    if(mediaUnlocked) return; mediaUnlocked = true;
+    const vids = document.querySelectorAll('.media-slide video');
+    vids.forEach(v=>{ try{ v.play().catch(()=>{}); }catch(e){} });
+    const btn = document.getElementById('playShowcase'); if(btn) btn.style.display = 'none';
+    document.removeEventListener('pointerdown', unlockMedia);
+  }
+  // Add a small play button (to unlock media) and a pause/resume control for auto-scroll
+  if(dotsEl){
+    const playBtn = document.createElement('button'); playBtn.id = 'playShowcase'; playBtn.className = 'media-play'; playBtn.textContent = 'Play';
+    playBtn.setAttribute('aria-label','Play showcase');
+    playBtn.addEventListener('click', unlockMedia);
+    dotsEl.parentNode.appendChild(playBtn);
+
+    const pauseBtn = document.createElement('button'); pauseBtn.id = 'pauseShowcase'; pauseBtn.className = 'media-pause'; pauseBtn.textContent = 'Pause';
+    pauseBtn.setAttribute('aria-label','Pause auto-scroll');
+    pauseBtn.addEventListener('click', ()=>{
+      autoplay = !autoplay;
+      if(!autoplay){ pauseBtn.textContent = 'Resume'; stopTimer(); }
+      else { pauseBtn.textContent = 'Pause'; startTimer(); }
+    });
+    // append to parent of slides so it's positioned over the viewer
+    slidesEl.parentNode.appendChild(pauseBtn);
+  }
+  // also unlock on first pointer interaction anywhere
+  document.addEventListener('pointerdown', unlockMedia, { once: true, passive: true });
+
+  startTimer();
 
 })();
 function morphOpen(button, title, content){
