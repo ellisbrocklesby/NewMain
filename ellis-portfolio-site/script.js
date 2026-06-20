@@ -508,10 +508,10 @@ document.addEventListener('click', (e)=>{
     const v = current.querySelector('video');
     if(v){
       // wait for video to end then advance
-      const onEnd = ()=>{ v.removeEventListener('ended', onEnd); if(autoplay) next(); };
+      const onEnd = ()=>{ try{ if(timer) { clearTimeout(timer); timer = null; } }catch(e){} v.removeEventListener('ended', onEnd); if(autoplay) next(); };
       v.addEventListener('ended', onEnd, { once: true });
       // as fallback, if video already ended or can't play, set safety timeout (e.g., 10s)
-      timer = setTimeout(()=>{ try{ v.removeEventListener('ended', onEnd); if(autoplay) next(); }catch(e){} }, Math.max(10000, v.duration? (v.duration*1000 + 200):10000));
+      timer = setTimeout(()=>{ try{ v.removeEventListener('ended', onEnd); if(autoplay) next(); }catch(e){} timer = null; }, Math.max(10000, v.duration? (v.duration*1000 + 200):10000));
     } else {
       // image: show for 3 seconds
       timer = setTimeout(()=>{ if(autoplay) next(); }, 3000);
@@ -539,36 +539,73 @@ document.addEventListener('click', (e)=>{
   render(); goTo(index);
 
   // Ensure videos can start by using a user gesture unlock (some browsers block autoplay).
-  let mediaUnlocked = false;
+  window.mediaUnlocked = false;
   function unlockMedia(){
-    if(mediaUnlocked) return; mediaUnlocked = true;
+    if(window.mediaUnlocked) return; window.mediaUnlocked = true;
     const vids = document.querySelectorAll('.media-slide video');
     vids.forEach(v=>{ try{ v.play().catch(()=>{}); }catch(e){} });
-    const btn = document.getElementById('playShowcase'); if(btn) btn.style.display = 'none';
     document.removeEventListener('pointerdown', unlockMedia);
   }
-  // Add a small play button (to unlock media) and a pause/resume control for auto-scroll
+  // Inline mute toggle next to the dots (no play/pause control)
   if(dotsEl){
-    const playBtn = document.createElement('button'); playBtn.id = 'playShowcase'; playBtn.className = 'media-play'; playBtn.textContent = 'Play';
-    playBtn.setAttribute('aria-label','Play showcase');
-    playBtn.addEventListener('click', unlockMedia);
-    dotsEl.parentNode.appendChild(playBtn);
+    const muteBtn = document.createElement('button'); muteBtn.id = 'muteToggleInline'; muteBtn.className = 'media-mute';
+    muteBtn.setAttribute('aria-label','Toggle mute');
+    function updateMuteIcon(){
+      if(window.mediaMuted){
+        muteBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 12a4.5 4.5 0 00-4.5-4.5v9A4.5 4.5 0 0016.5 12z" fill="currentColor" opacity="0.9"/><path d="M19 3L5 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      } else {
+        muteBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 10v4h4l5 5V5L7 10H3z" fill="currentColor"/><path d="M16 8a4 4 0 010 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      }
+    }
 
-    const pauseBtn = document.createElement('button'); pauseBtn.id = 'pauseShowcase'; pauseBtn.className = 'media-pause'; pauseBtn.textContent = 'Pause';
-    pauseBtn.setAttribute('aria-label','Pause auto-scroll');
-    pauseBtn.addEventListener('click', ()=>{
-      autoplay = !autoplay;
-      if(!autoplay){ pauseBtn.textContent = 'Resume'; stopTimer(); }
-      else { pauseBtn.textContent = 'Pause'; startTimer(); }
+    muteBtn.addEventListener('click', ()=>{
+      window.mediaMuted = !window.mediaMuted;
+      localStorage.setItem('mediaMuted', window.mediaMuted ? '1':'0');
+      const s = document.getElementById('muteToggleSettings'); if(s) s.checked = window.mediaMuted;
+      updateMuteIcon();
+      const workInView = document.getElementById('work') && document.getElementById('work').getBoundingClientRect().top < window.innerHeight && document.getElementById('work').getBoundingClientRect().bottom > window.innerHeight*0.2;
+      document.querySelectorAll('#mediaSlides video').forEach(v=>{ try{ v.muted = (window.mediaMuted) ? true : !(workInView && window.mediaUnlocked); }catch(e){} });
     });
-    // append to parent of slides so it's positioned over the viewer
-    slidesEl.parentNode.appendChild(pauseBtn);
+
+    dotsEl.appendChild(muteBtn);
+    // initialize mute state from localStorage (default: unmuted)
+    const saved = localStorage.getItem('mediaMuted');
+    window.mediaMuted = (saved === null) ? false : (saved === '1');
+    const sCheckbox = document.getElementById('muteToggleSettings'); if(sCheckbox) sCheckbox.checked = window.mediaMuted;
+    updateMuteIcon();
+    // apply initial mute state to current videos
+    const workInViewInit = document.getElementById('work') && document.getElementById('work').getBoundingClientRect().top < window.innerHeight && document.getElementById('work').getBoundingClientRect().bottom > window.innerHeight*0.2;
+    document.querySelectorAll('#mediaSlides video').forEach(v=>{ try{ v.muted = (window.mediaMuted) ? true : !(workInViewInit && window.mediaUnlocked); if(!v.muted) v.volume = 0.8; }catch(e){} });
+    if(sCheckbox){ sCheckbox.addEventListener('change', (e)=>{ window.mediaMuted = e.target.checked; localStorage.setItem('mediaMuted', window.mediaMuted ? '1':'0'); updateMuteIcon();
+        // apply immediately to visible videos
+        const workInView = document.getElementById('work') && document.getElementById('work').getBoundingClientRect().top < window.innerHeight && document.getElementById('work').getBoundingClientRect().bottom > window.innerHeight*0.2;
+        document.querySelectorAll('#mediaSlides video').forEach(v=>{ try{ v.muted = (window.mediaMuted) ? true : !(workInView && window.mediaUnlocked); }catch(e){} });
+      } ); }
   }
   // also unlock on first pointer interaction anywhere
   document.addEventListener('pointerdown', unlockMedia, { once: true, passive: true });
 
   startTimer();
 
+})();
+
+// When the user scrolls to the `#work` section, allow video audio if the user has unlocked media.
+(() => {
+  const work = document.getElementById('work');
+  if(!work) return;
+  const obs = new IntersectionObserver(entries => {
+    const e = entries[0];
+    const inView = e.isIntersecting && e.intersectionRatio > 0.5;
+    const vids = document.querySelectorAll('#mediaSlides video');
+    vids.forEach(v => {
+      try{
+        // respect user mute preference: if user muted, keep muted; otherwise only unmute when inView and unlocked
+        if(window.mediaMuted){ v.muted = true; }
+        else { v.muted = !(inView && window.mediaUnlocked); if(!v.muted) v.volume = 0.8; }
+      }catch(e){ /* ignore */ }
+    });
+  }, { threshold: [0.5] });
+  obs.observe(work);
 })();
 function morphOpen(button, title, content){
   // compute start rect

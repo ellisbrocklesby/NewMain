@@ -118,8 +118,8 @@ html, body, .bg-gradient, .glass, .card, .morph-card, .nav, .nav-links a, .hero-
 .media-stage{position:relative;background:linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02));border-radius:12px;overflow:hidden}
 .media-slides{position:relative;width:100%;height:420px;/* fixed height so surrounding layout doesn't shift */}
 .media-slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.media-slide img, .media-slide video{height:100%;width:auto;max-width:100%;object-fit:contain;object-position:center center}
-.media-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.36);border:none;color:#fff;padding:10px;border-radius:8px;cursor:pointer}
+.media-slide img, .media-slide video{height:100%;width:auto;max-width:100%;object-fit:contain;object-position:center center;border-radius:10px}
+.media-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.36);border:none;color:#fff;padding:10px;border-radius:8px;cursor:pointer;z-index:60}
 .media-arrow.prev{left:8px}
 .media-arrow.next{right:8px}
 .media-controls{display:flex;align-items:center;justify-content:space-between;padding:8px}
@@ -127,9 +127,14 @@ html, body, .bg-gradient, .glass, .card, .morph-card, .nav, .nav-links a, .hero-
 .media-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.18);cursor:pointer}
 .media-dot.active{background:var(--accent)}
 
-/* Auto-scroll pause control (bottom-left) */
-.media-pause{position:absolute;left:10px;bottom:10px;z-index:120;background:rgba(0,0,0,0.5);color:#fff;border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
-.media-play{margin-left:8px;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,0.36);color:#fff;border:0;cursor:pointer}
+.media-dots .media-mute{background:transparent;border:0;color:rgba(255,255,255,0.9);margin-left:8px;padding:6px;border-radius:8px;cursor:pointer}
+.media-mute svg{width:16px;height:16px}
+
+/* Settings mute toggle styled like other switches */
+#muteToggleSettings{ appearance:none; -webkit-appearance:none; width:46px; height:26px; background: rgba(255,255,255,0.12); border-radius:999px; position:relative; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition: background .28s ease, border-color .28s ease }
+#muteToggleSettings::after{ content:''; position:absolute; left:3px; top:3px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 4px 10px rgba(2,6,23,0.3); transition: transform .28s cubic-bezier(.2,.9,.3,1), background .28s ease }
+#muteToggleSettings:checked{ background: linear-gradient(90deg,var(--accent), #60a5fa); border-color: rgba(0,0,0,0.08) }
+#muteToggleSettings:checked::after{ transform: translateX(20px); background: #052026 }
 
 @media (max-width:900px){
   .media-slides{height:260px}
@@ -422,8 +427,8 @@ footer {
   margin:18px auto 0;
 }
 .avatar-wrap{width:72px;height:72px;flex:0 0 72px;border-radius:12px;overflow:hidden;position:relative;background:linear-gradient(135deg,#6a5cff,#8a2be2);display:flex;align-items:center;justify-content:center}
-.avatar{width:100%;height:100%;object-fit:cover;display:block}
-.avatar-fallback{position:absolute;color:white;font-weight:700;font-size:28px}
+.avatar{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:2}
+.avatar-fallback{position:absolute;color:white;font-weight:700;font-size:28px;z-index:1}
 .profile-info p{margin:6px 0 0;font-size:0.9rem;opacity:0.95}
 .hero-buttons{display:flex;gap:10px;margin-top:10px}
 .hero-buttons button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);color:white;padding:8px 12px;border-radius:10px}
